@@ -17,7 +17,7 @@ const alertRoutes = require("./routes/alertRoutes");
 const generateSensorData = require("./utils/helpers");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
-
+const analyticsRoutes = require("./routes/analyticsRoutes");
 
 
 // Middleware
@@ -32,7 +32,7 @@ app.use("/api/alerts", alertRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
 app.use(errorHandler);
-
+app.use("/api/analytics", analyticsRoutes);
 
 // Test route
 app.get("/", (req, res) => {
