@@ -38,7 +38,12 @@ const addPrediction = async (req, res) => {
 // Get all predictions
 const getPredictions = async (req, res) => {
   try {
-    const predictions = await Prediction.find();
+    const predictions = await Prediction.aggregate([
+      { $sort: { timestamp: -1 } },
+      { $group: { _id: "$machineId", doc: { $first: "$$ROOT" } } },
+      { $replaceRoot: { newRoot: "$doc" } },
+      { $sort: { machineId: 1 } }
+    ]);
 
     res.status(200).json(predictions);
   } catch (error) {

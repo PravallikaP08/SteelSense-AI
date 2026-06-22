@@ -25,7 +25,7 @@ const createAlert = async (req, res) => {
 // Get all alerts
 const getAlerts = async (req, res) => {
   try {
-    const alerts = await Alert.find();
+    const alerts = await Alert.find().sort({ timestamp: -1 }).limit(20);
 
     res.status(200).json(alerts);
   } catch (error) {

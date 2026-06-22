@@ -15,6 +15,10 @@ const predictionSchema = new mongoose.Schema(
       enum: ["Healthy", "Warning", "Critical"],
       required: true
     },
+    recommendation: {
+      type: String,
+      default: "System healthy."
+    },
     timestamp: {
       type: Date,
       default: Date.now

@@ -27,7 +27,13 @@ const addSensorData = async (req, res) => {
 // Get all sensor data
 const getSensorData = async (req, res) => {
   try {
-    const sensorData = await SensorData.find();
+    // Get the latest sensor data for each machine
+    const sensorData = await SensorData.aggregate([
+      { $sort: { timestamp: -1 } },
+      { $group: { _id: "$machineId", doc: { $first: "$$ROOT" } } },
+      { $replaceRoot: { newRoot: "$doc" } },
+      { $sort: { machineId: 1 } }
+    ]);
 
     res.status(200).json(sensorData);
   } catch (error) {

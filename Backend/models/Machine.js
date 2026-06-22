@@ -17,8 +17,8 @@ const machineSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Active", "Inactive", "Maintenance"],
-      default: "Active"
+      enum: ["Active", "Inactive", "Maintenance", "Critical", "Warning", "Healthy"],
+      default: "Healthy"
     }
   },
   {

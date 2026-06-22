@@ -4,7 +4,12 @@ const Machine = require("../models/Machine");
 
 const getAnalytics = async (req, res) => {
   try {
-    const sensorData = await SensorData.find();
+    // Get latest sensor data for each machine to compute averages
+    const sensorData = await SensorData.aggregate([
+      { $sort: { timestamp: -1 } },
+      { $group: { _id: "$machineId", doc: { $first: "$$ROOT" } } },
+      { $replaceRoot: { newRoot: "$doc" } }
+    ]);
 
     let avgTemp = 0;
     let avgPressure = 0;
@@ -24,7 +29,12 @@ const getAnalytics = async (req, res) => {
         sensorData.length;
     }
 
-    const totalAlerts = await Alert.countDocuments();
+    // Active alerts (High/Medium) in the last hour
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    const totalAlerts = await Alert.countDocuments({
+       timestamp: { $gte: oneHourAgo }
+    });
+    
     const totalMachines = await Machine.countDocuments();
 
     res.json({

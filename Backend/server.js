@@ -14,7 +14,8 @@ const machineRoutes = require("./routes/machineRoutes");
 const sensorRoutes = require("./routes/sensorRoutes");
 const predictionRoutes = require("./routes/predictionRoutes");
 const alertRoutes = require("./routes/alertRoutes");
-const generateSensorData = require("./utils/helpers");
+const authRoutes = require("./routes/authRoutes");
+const { generateSensorData, seedMachines } = require("./utils/helpers");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 const analyticsRoutes = require("./routes/analyticsRoutes");
@@ -29,10 +30,12 @@ app.use("/api/machines", machineRoutes);
 app.use("/api/sensors", sensorRoutes);
 app.use("/api/predictions", predictionRoutes);
 app.use("/api/alerts", alertRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
-app.use(errorHandler);
 app.use("/api/analytics", analyticsRoutes);
+
+app.use(errorHandler);
 
 // Test route
 app.get("/", (req, res) => {
@@ -40,9 +43,10 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
+seedMachines();
 setInterval(() => {
   generateSensorData();
-}, 5000);
+}, 3000);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

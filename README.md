@@ -1,15 +1,16 @@
 # SteelSenseAI
 
-SteelSenseAI is an AI-powered predictive maintenance system for industrial machine monitoring.
+AI-based predictive maintenance system for industrial machine monitoring.
 
 ## Features
 
-- Real-time sensor data simulation
-- Automatic machine failure prediction
+- Machine monitoring API
+- Sensor data simulation
+- Prediction engine
 - Automatic alert generation
-- Machine monitoring APIs
 - Dashboard summary API
-- MongoDB data storage
+- Analytics API
+- Real-time machine health monitoring
 
 ## Tech Stack
 
@@ -17,15 +18,10 @@ Backend:
 - Node.js
 - Express.js
 - MongoDB
-- Mongoose
 
-Frontend (Planned):
+Frontend (Upcoming):
 - React.js
+- Tailwind CSS
 
-ML Service (Planned):
-- Python
-- Scikit-learn
-
-## Workflow
-
-Sensor Data → Prediction Engine → Risk Analysis → Alert Generation
+AI Layer (Upcoming):
+- Machine failure prediction
