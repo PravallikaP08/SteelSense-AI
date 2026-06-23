@@ -13,8 +13,9 @@ import Settings from './pages/Settings';
 import About from './pages/About';
 import SystemHealth from './pages/SystemHealth';
 import Analytics from './pages/Analytics';
-import Notifications from './pages/Notifications';
+import Maintenance from './pages/Maintenance';
 import Profile from './pages/Profile';
+import Notifications from './pages/Notifications';
 import useAuthStore from './store/authStore';
 import { Navigate } from 'react-router-dom';
 
@@ -41,11 +42,12 @@ function App() {
           <Route path="predictions" element={<Predictions />} />
           <Route path="alerts" element={<Alerts />} />
           <Route path="analytics" element={<Analytics />} />
-          <Route path="notifications" element={<Notifications />} />
-          <Route path="profile" element={<Profile />} />
+          <Route path="maintenance" element={<Maintenance />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="about" element={<About />} />
           <Route path="system-health" element={<SystemHealth />} />
+          <Route path="notifications" element={<Notifications />} />
         </Route>
       </Routes>
     </AnimatePresence>

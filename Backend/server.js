@@ -19,6 +19,8 @@ const { generateSensorData, seedMachines } = require("./utils/helpers");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const errorHandler = require("./middleware/errorMiddleware");
 const analyticsRoutes = require("./routes/analyticsRoutes");
+const maintenanceRoutes = require("./routes/maintenanceRoutes");
+const assistantRoutes = require("./routes/assistantRoutes");
 
 
 // Middleware
@@ -34,6 +36,8 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/maintenance", maintenanceRoutes);
+app.use("/api/assistant", assistantRoutes);
 
 app.use(errorHandler);
 

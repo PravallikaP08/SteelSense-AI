@@ -12,12 +12,16 @@ const alertSchema = new mongoose.Schema(
     },
     severity: {
       type: String,
-      enum: ["Low", "Medium", "High"],
+      enum: ["Low", "Medium", "High", "Critical"],
       required: true
     },
     message: {
       type: String,
       required: true
+    },
+    read: {
+      type: Boolean,
+      default: false
     },
     timestamp: {
       type: Date,

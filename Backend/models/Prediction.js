@@ -19,6 +19,10 @@ const predictionSchema = new mongoose.Schema(
       type: String,
       default: "System healthy."
     },
+    remainingUsefulLife: {
+      type: Number,
+      default: 2000
+    },
     timestamp: {
       type: Date,
       default: Date.now

@@ -1,13 +1,15 @@
 const express = require("express");
-
+const router = express.Router();
 const {
   createAlert,
-  getAlerts
+  getAlerts,
+  markAlertRead,
+  markAllAlertsRead
 } = require("../controllers/alertController");
-
-const router = express.Router();
 
 router.post("/", createAlert);
 router.get("/", getAlerts);
+router.put("/mark-all-read", markAllAlertsRead);
+router.put("/:id/read", markAlertRead);
 
 module.exports = router;

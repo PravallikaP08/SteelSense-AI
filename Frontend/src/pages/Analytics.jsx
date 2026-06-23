@@ -1,11 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Activity, Thermometer, Gauge, AlertTriangle, ShieldCheck, Cpu } from 'lucide-react';
+import { Activity, ShieldCheck, Cpu, Clock, Zap, TrendingUp, AlertTriangle } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, Legend } from 'recharts';
 import { useAnalytics } from '../hooks/useAnalytics';
 import { usePredictions } from '../hooks/usePredictions';
 import { useAlerts } from '../hooks/useAlerts';
-import { useMachines } from '../hooks/useMachines';
 import PageTransition from '../components/PageTransition';
 import { cn } from '../utils/cn';
 
@@ -13,9 +12,8 @@ const Analytics = () => {
   const { data: analytics, isLoading: analyticsLoading } = useAnalytics();
   const { data: predictions, isLoading: predictionsLoading } = usePredictions();
   const { data: alerts, isLoading: alertsLoading } = useAlerts();
-  const { data: machines, isLoading: machinesLoading } = useMachines();
 
-  const isLoading = analyticsLoading || predictionsLoading || alertsLoading || machinesLoading;
+  const isLoading = analyticsLoading || predictionsLoading || alertsLoading;
 
   if (isLoading) {
     return (
@@ -25,19 +23,19 @@ const Analytics = () => {
     );
   }
 
-  // Calculate status counts
-  const statusCounts = machines?.reduce((acc, m) => {
-    const status = m.status || 'Active';
-    acc[status] = (acc[status] || 0) + 1;
-    return acc;
-  }, { Active: 0, Warning: 0, Critical: 0, Maintenance: 0 }) || { Active: 0, Warning: 0, Critical: 0, Maintenance: 0 };
-
-  const statusPieData = [
-    { name: 'Optimal', value: statusCounts.Active, color: '#10b981' },
-    { name: 'Warning', value: statusCounts.Warning, color: '#f59e0b' },
-    { name: 'Critical', value: statusCounts.Critical, color: '#f43f5e' },
-    { name: 'Maintenance', value: statusCounts.Maintenance, color: '#6366f1' },
-  ].filter(d => d.value > 0);
+  // Get data metrics from backend response
+  const stats = analytics || {
+    totalMachines: 0,
+    totalAlerts: 0,
+    machineHealthScore: 100,
+    efficiencyPercentage: 92,
+    downtimeMinutes: 0,
+    averageTemperature: 0,
+    averagePressure: 0,
+    averageVibration: 0,
+    weeklyPerformance: [],
+    downtimeCauses: []
+  };
 
   // Map predictions data for BarChart
   const predictionChartData = predictions?.map(p => ({
@@ -56,19 +54,10 @@ const Analytics = () => {
     count,
   }));
 
-  // Averages stat data
-  const stats = analytics || {
-    averageTemperature: 0,
-    averagePressure: 0,
-    averageVibration: 0,
-    totalAlerts: 0,
-    totalMachines: 0,
-  };
-
   const statCards = [
-    { title: 'Fleet Average Temperature', value: `${Number(stats.averageTemperature || 0).toFixed(1)} °C`, icon: Thermometer, color: 'text-orange-400 bg-orange-400/10 border-orange-400/20' },
-    { title: 'Fleet Average Pressure', value: `${Number(stats.averagePressure || 0).toFixed(1)} PSI`, icon: Gauge, color: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20' },
-    { title: 'Fleet Average Vibration', value: `${Number(stats.averageVibration || 0).toFixed(1)} mm/s`, icon: Activity, color: 'text-purple-400 bg-purple-400/10 border-purple-400/20' },
+    { title: 'Plant OEE / Efficiency', value: `${stats.efficiencyPercentage || 92}%`, subtext: 'Target: >85% OEE', icon: Zap, color: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20' },
+    { title: 'Overall Fleet Health', value: `${stats.machineHealthScore || 94}%`, subtext: 'Based on machine status', icon: ShieldCheck, color: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20' },
+    { title: 'Active Downtime', value: `${stats.downtimeMinutes || 0}m`, subtext: 'Critical machine failures', icon: Clock, color: 'text-rose-400 bg-rose-400/10 border-rose-400/20' },
   ];
 
   return (
@@ -80,18 +69,19 @@ const Analytics = () => {
           </div>
           Fleet Analytics
         </h1>
-        <p className="text-white/50 mt-2">Comprehensive telemetry diagnostics and predictive trends</p>
+        <p className="text-white/50 mt-2">Comprehensive telemetry diagnostics, downtime analytics, and plant efficiency performance</p>
       </header>
 
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statCards.map((card, i) => (
-          <div key={i} className={cn("rounded-2xl border p-6 flex items-center justify-between bg-[#09090b]/50 shadow-xl", card.color.split(' ')[2])}>
-            <div>
-              <p className="text-sm font-semibold text-white/40 uppercase tracking-widest mb-1">{card.title}</p>
-              <h3 className="text-3xl font-black text-white">{card.value}</h3>
+          <div key={i} className="rounded-3xl border border-white/[0.05] p-6 flex items-center justify-between bg-[#09090b]/55 shadow-xl relative overflow-hidden group hover:bg-white/[0.01] transition-all">
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-white/40 uppercase tracking-widest">{card.title}</p>
+              <h3 className="text-4xl font-black text-white">{card.value}</h3>
+              <p className="text-[10px] font-semibold text-white/30">{card.subtext}</p>
             </div>
-            <div className={cn("p-4 rounded-xl border", card.color)}>
+            <div className={cn("p-4 rounded-2xl border shrink-0", card.color)}>
               <card.icon className="w-6 h-6" />
             </div>
           </div>
@@ -100,25 +90,26 @@ const Analytics = () => {
 
       {/* Main charts section */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        
         {/* Failure probability chart */}
-        <div className="rounded-3xl bg-[#09090b]/50 border border-white/[0.05] p-6 shadow-2xl relative overflow-hidden">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+        <div className="rounded-3xl bg-[#09090b]/55 border border-white/[0.05] p-6 shadow-2xl relative overflow-hidden">
+          <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
             <Activity className="w-5 h-5 text-indigo-400" />
-            Failure Probabilities by Machine (%)
+            Impending Machine Failure Probability (%)
           </h3>
-          <div className="h-[300px]">
+          <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={predictionChartData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} />
-                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} domain={[0, 100]} />
+                <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} />
+                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} domain={[0, 100]} />
                 <Tooltip
                   contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
                   itemStyle={{ color: '#fff' }}
                 />
-                <Bar dataKey="probability" radius={[8, 8, 0, 0]}>
+                <Bar dataKey="probability" radius={[6, 6, 0, 0]}>
                   {predictionChartData.map((entry, index) => {
-                    const color = entry.probability > 80 ? '#f43f5e' : entry.probability > 50 ? '#f59e0b' : '#10b981';
+                    const color = entry.probability >= 80 ? '#f43f5e' : entry.probability >= 40 ? '#f59e0b' : '#10b981';
                     return <Cell key={`cell-${index}`} fill={color} />;
                   })}
                 </Bar>
@@ -127,79 +118,108 @@ const Analytics = () => {
           </div>
         </div>
 
-        {/* Operating status distribution */}
-        <div className="rounded-3xl bg-[#09090b]/50 border border-white/[0.05] p-6 shadow-2xl flex flex-col justify-between">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-400" />
-            Fleet Status Allocation
+        {/* Weekly plant performance trends */}
+        <div className="rounded-3xl bg-[#09090b]/55 border border-white/[0.05] p-6 shadow-2xl flex flex-col justify-between">
+          <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-emerald-400" />
+            7-Day Historical Performance Trends
           </h3>
-          <div className="flex flex-col md:flex-row items-center justify-around gap-6 flex-1">
-            {statusPieData.length > 0 ? (
+          <div className="h-[280px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stats.weeklyPerformance} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorOEE" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                <XAxis dataKey="day" stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} />
+                <YAxis stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} domain={[60, 100]} />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                  itemStyle={{ color: '#fff' }}
+                />
+                <Area type="monotone" dataKey="efficiency" name="OEE Efficiency (%)" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorOEE)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Alert frequencies */}
+        <div className="rounded-3xl bg-[#09090b]/55 border border-white/[0.05] p-6 shadow-2xl">
+          <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-rose-400" />
+            Alert Frequency Distribution
+          </h3>
+          {alertChartData.length > 0 ? (
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={alertChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+                  <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} />
+                  <YAxis stroke="rgba(255,255,255,0.3)" fontSize={11} tickLine={false} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                  <Bar dataKey="count" name="Alert Count" fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={50} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="py-20 text-center text-white/30 text-sm border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
+              No alarms recorded in system logs currently.
+            </div>
+          )}
+        </div>
+
+        {/* Downtime Causes distribution */}
+        <div className="rounded-3xl bg-[#09090b]/55 border border-white/[0.05] p-6 shadow-2xl flex flex-col justify-between">
+          <h3 className="text-base font-bold text-white mb-6 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-orange-400" />
+            Downtime Cause Analysis
+          </h3>
+          <div className="flex flex-col sm:flex-row items-center justify-around gap-6 flex-1">
+            {stats.downtimeCauses && stats.downtimeCauses.length > 0 ? (
               <>
-                <div className="h-[220px] w-[220px]">
+                <div className="h-[200px] w-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={statusPieData}
+                        data={stats.downtimeCauses}
                         cx="50%"
                         cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
+                        innerRadius={50}
+                        outerRadius={70}
+                        paddingAngle={4}
                         dataKey="value"
                       >
-                        {statusPieData.map((entry, index) => (
+                        {stats.downtimeCauses.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-                <div className="space-y-3">
-                  {statusPieData.map((entry, i) => (
-                    <div key={i} className="flex items-center gap-3 bg-white/[0.02] border border-white/5 px-4 py-2.5 rounded-xl">
-                      <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: entry.color }} />
+                <div className="space-y-2">
+                  {stats.downtimeCauses.map((entry, i) => (
+                    <div key={i} className="flex items-center gap-3 bg-white/[0.02] border border-white/5 px-4 py-2 rounded-2xl">
+                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
                       <div>
-                        <p className="text-xs font-semibold text-white/50">{entry.name}</p>
-                        <p className="text-sm font-bold text-white">{entry.value} Units</p>
+                        <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">{entry.name}</p>
+                        <p className="text-xs font-extrabold text-white">{entry.value}% of total downtime</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </>
             ) : (
-              <div className="text-white/30 text-sm py-12">No data active</div>
+              <div className="text-white/30 text-sm py-12">No downtime causes log found</div>
             )}
           </div>
         </div>
 
-        {/* Alert frequencies */}
-        <div className="rounded-3xl bg-[#09090b]/50 border border-white/[0.05] p-6 shadow-2xl xl:col-span-2">
-          <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-rose-400" />
-            Alert Volume by Machine
-          </h3>
-          {alertChartData.length > 0 ? (
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={alertChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
-                  <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} />
-                  <YAxis stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} allowDecimals={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                    itemStyle={{ color: '#fff' }}
-                  />
-                  <Bar dataKey="count" fill="#3b82f6" radius={[6, 6, 0, 0]} maxBarSize={60} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="py-20 text-center text-white/30 text-sm border border-dashed border-white/10 rounded-2xl bg-white/[0.01]">
-              No alerts logged in the system.
-            </div>
-          )}
-        </div>
       </div>
     </PageTransition>
   );
