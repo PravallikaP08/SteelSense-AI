@@ -22,9 +22,7 @@ const Settings = () => {
   // Preferences settings state
   const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(true);
-  const [apiEndpoint, setApiEndpoint] = useState('http://localhost:5000/api');
-
-  // Messages state
+  const [apiEndpoint, setApiEndpoint] = useState(import.meta.env.VITE_API_URL || 'https://steelsense-ai-y5cb.onrender.com/api');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
